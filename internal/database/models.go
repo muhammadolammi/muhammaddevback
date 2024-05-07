@@ -5,11 +5,35 @@
 package database
 
 import (
+	"database/sql"
+
 	"github.com/google/uuid"
 )
 
-type Test struct {
-	ID   uuid.UUID
-	Name string
-	Test string
+type Image struct {
+	ID       uuid.UUID
+	ImageUrl string
+}
+
+type Playlist struct {
+	ID          uuid.UUID
+	Name        string
+	Description sql.NullString
+}
+
+type Post struct {
+	ID          uuid.UUID
+	Title       string
+	PostUrl     string
+	Content     string
+	YoutubeLink sql.NullString
+}
+
+type Tutorial struct {
+	ID          uuid.UUID
+	Title       string
+	TutorialUrl string
+	Description string
+	YoutubeLink string
+	PlaylistID  uuid.UUID
 }
