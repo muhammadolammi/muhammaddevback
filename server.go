@@ -24,6 +24,13 @@ func server(apiConfig *Config) {
 	router.Use(cors.Handler(corsOptions))
 	apiRoute.Get("/hello", helloReady)
 	apiRoute.Get("/error", errorReady)
+	apiRoute.Post("/playlists", apiConfig.postPlaylistHandler)
+	apiRoute.Get("/playlists", apiConfig.getPlaylistsHandler)
+	apiRoute.Post("/tutorials", apiConfig.postTutorialHandler)
+	apiRoute.Get("/tutorials/{playlistID}", apiConfig.getPlaylistTutorials)
+	apiRoute.Get("/tutorials", apiConfig.getTutorials)
+	apiRoute.Get("/images", apiConfig.getImagesHandler)
+	apiRoute.Post("/images", apiConfig.postImageHandler)
 
 	router.Mount("/api", apiRoute)
 	router.Get("/", renderHome)

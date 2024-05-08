@@ -7,16 +7,15 @@ package database
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"database/sql"
 )
 
-const getPlaylist = `-- name: GetPlaylist :many
+const getPlaylists = `-- name: GetPlaylists :many
 SELECT id, name, description FROM playlists
 `
 
-func (q *Queries) GetPlaylist(ctx context.Context) ([]Playlist, error) {
-	rows, err := q.db.QueryContext(ctx, getPlaylist)
+func (q *Queries) GetPlaylists(ctx context.Context) ([]Playlist, error) {
+	rows, err := q.db.QueryContext(ctx, getPlaylists)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +37,22 @@ func (q *Queries) GetPlaylist(ctx context.Context) ([]Playlist, error) {
 	return items, nil
 }
 
-const getPlaylistIdByName = `-- name: GetPlaylistIdByName :one
-SELECT name FROM playlists
-WHERE $1=id
+const postPlaylist = `-- name: PostPlaylist :one
+INSERT INTO playlists (
+name,
+description )
+VALUES ( $1, $2)
+RETURNING id, name, description
 `
 
-func (q *Queries) GetPlaylistIdByName(ctx context.Context, id uuid.UUID) (string, error) {
-	row := q.db.QueryRowContext(ctx, getPlaylistIdByName, id)
-	var name string
-	err := row.Scan(&name)
-	return name, err
+type PostPlaylistParams struct {
+	Name        string
+	Description sql.NullString
+}
+
+func (q *Queries) PostPlaylist(ctx context.Context, arg PostPlaylistParams) (Playlist, error) {
+	row := q.db.QueryRowContext(ctx, postPlaylist, arg.Name, arg.Description)
+	var i Playlist
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
 }

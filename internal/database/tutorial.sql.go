@@ -48,11 +48,11 @@ func (q *Queries) GetPlaylistTutorials(ctx context.Context, playlistID uuid.UUID
 
 const getTutorial = `-- name: GetTutorial :one
 SELECT id, title, tutorial_url, description, youtube_link, playlist_id FROM tutorials
-WHERE $1=title
+WHERE $1=id
 `
 
-func (q *Queries) GetTutorial(ctx context.Context, title string) (Tutorial, error) {
-	row := q.db.QueryRowContext(ctx, getTutorial, title)
+func (q *Queries) GetTutorial(ctx context.Context, id uuid.UUID) (Tutorial, error) {
+	row := q.db.QueryRowContext(ctx, getTutorial, id)
 	var i Tutorial
 	err := row.Scan(
 		&i.ID,
@@ -97,4 +97,45 @@ func (q *Queries) GetTutorials(ctx context.Context) ([]Tutorial, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const postTutorial = `-- name: PostTutorial :one
+INSERT INTO tutorials (
+
+title,
+tutorial_url,
+description ,
+youtube_link,
+playlist_id
+)
+VALUES ($1, $2, $3 , $4, $5)
+RETURNING id, title, tutorial_url, description, youtube_link, playlist_id
+`
+
+type PostTutorialParams struct {
+	Title       string
+	TutorialUrl string
+	Description string
+	YoutubeLink string
+	PlaylistID  uuid.UUID
+}
+
+func (q *Queries) PostTutorial(ctx context.Context, arg PostTutorialParams) (Tutorial, error) {
+	row := q.db.QueryRowContext(ctx, postTutorial,
+		arg.Title,
+		arg.TutorialUrl,
+		arg.Description,
+		arg.YoutubeLink,
+		arg.PlaylistID,
+	)
+	var i Tutorial
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.TutorialUrl,
+		&i.Description,
+		&i.YoutubeLink,
+		&i.PlaylistID,
+	)
+	return i, err
 }
