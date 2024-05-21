@@ -22,11 +22,11 @@ type Playlist struct {
 }
 
 type Post struct {
-	ID          uuid.UUID
-	Title       string
-	PostUrl     string
-	Content     string
-	YoutubeLink sql.NullString
+	ID        uuid.UUID
+	Title     string
+	PostUrl   string
+	Content   string
+	Thumbnail sql.NullString
 }
 
 type Tutorial struct {

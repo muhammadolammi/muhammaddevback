@@ -53,3 +53,22 @@ func dbImagesToImages(dbImages []database.Image) []Image {
 	}
 	return images
 }
+
+func dbPostToPost(dbPost database.Post) Post {
+	return Post{
+		ID:      dbPost.ID.String(),
+		Title:   dbPost.Title,
+		PostUrl: dbPost.PostUrl,
+		Content: dbPost.Content,
+		Thumbnail: dbPost.Thumbnail.String,
+	}
+}
+
+func dbPostsToPosts(dbPosts []database.Post) []Post {
+	posts := []Post{}
+	for _, dbPost := range dbPosts {
+		posts = append(posts, dbPostToPost(dbPost))
+	}
+
+	return posts
+}

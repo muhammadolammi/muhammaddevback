@@ -7,7 +7,7 @@ CREATE TABLE tutorials (
     tutorial_url TEXT UNIQUE NOT NULL ,
     description TEXT   NOT NULL,
     youtube_link TEXT  NOT NULL,
-    playlist_id UUID REFERENCES playlists(id)  ON DELETE CASCADE
+    playlist_id UUID REFERENCES playlists(id)  ON DELETE CASCADE NOT NULL
 
 );
 

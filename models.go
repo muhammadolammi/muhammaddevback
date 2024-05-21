@@ -12,11 +12,11 @@ type Playlist struct {
 }
 
 type Post struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	PostUrl     string `json:"post_url"`
-	Content     string `json:"content"`
-	YoutubeLink string `json:"youtube_link"`
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	PostUrl string `json:"post_url"`
+	Content string `json:"content"`
+	Thumbnail string `json:"thumbnail"`
 }
 
 type Tutorial struct {

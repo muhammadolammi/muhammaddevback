@@ -7,8 +7,8 @@ CREATE TABLE posts (
     title TEXT UNIQUE NOT NULL ,
     post_url TEXT UNIQUE NOT NULL ,
     content TEXT   NOT NULL,
-    youtube_link TEXT  
-
+    thumbnail TEXT 
+   
 );
 
 -- +goose Down
