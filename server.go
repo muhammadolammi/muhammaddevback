@@ -27,16 +27,23 @@ func server(apiConfig *Config) {
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)
-	apiRoute.Put("/post/{postID}", apiConfig.updatePosttHandler)
-	apiRoute.Delete("/post/{postID}", apiConfig.deletePosttHandler)
+	apiRoute.Put("/post/{postID}", apiConfig.updatePostHandler)
+	apiRoute.Delete("/post/{postID}", apiConfig.deletePostHandler)
+	apiRoute.Get("/post/{postID}", apiConfig.getPostWithIdHandler)
+
 	// HANDLE PLAYLISTS
 
 	apiRoute.Post("/playlists", apiConfig.postPlaylistHandler)
 	apiRoute.Get("/playlists", apiConfig.getPlaylistsHandler)
 	// HANDLE TUTORIALS
 	apiRoute.Post("/tutorials", apiConfig.postTutorialHandler)
-	apiRoute.Get("/tutorials/{playlistID}", apiConfig.getPlaylistTutorials)
-	apiRoute.Get("/tutorials", apiConfig.getTutorials)
+	apiRoute.Get("/tutorials/{playlistID}", apiConfig.getPlaylistTutorialsHandler)
+	apiRoute.Get("/tutorials", apiConfig.getTutorialsHandler)
+	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
+	apiRoute.Get("/tutorial/{tutorialID}", apiConfig.getTutorialWithIdHandler)
+	apiRoute.Put("/tutorial/{tutorialID}", apiConfig.updateTutorialHandler)
+
+
 	// HANLDE IMAGES
 	apiRoute.Get("/images", apiConfig.getImagesHandler)
 	apiRoute.Post("/images", apiConfig.postImageHandler)

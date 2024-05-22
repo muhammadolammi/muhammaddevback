@@ -36,4 +36,5 @@ type Tutorial struct {
 	Description string
 	YoutubeLink string
 	PlaylistID  uuid.UUID
+	Thumbnail   sql.NullString
 }

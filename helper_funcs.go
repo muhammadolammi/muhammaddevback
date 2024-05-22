@@ -27,6 +27,7 @@ func dbTutorialToTutorial(dbTutorial database.Tutorial) Tutorial {
 		Description: dbTutorial.Description,
 		YoutubeLink: dbTutorial.YoutubeLink,
 		PlaylistID:  dbTutorial.PlaylistID.String(),
+		Thumbnail: dbTutorial.Thumbnail.String,
 	}
 }
 

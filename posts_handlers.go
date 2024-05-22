@@ -25,6 +25,25 @@ func (config *Config) getPostsHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, 200, resp)
 }
 
+func (config *Config) getPostWithIdHandler(w http.ResponseWriter, r *http.Request) {
+	idString:= chi.URLParam(r, "postID")
+	id , err := uuid.Parse(idString)
+	if err != nil {
+		respondWithError(w, 501, fmt.Sprintf("error  parsing id to uuid. err :%v", err))
+		return
+	}
+	dbPost, err := config.DB.GetPostWithId(r.Context(), id)
+	if err != nil {
+		respondWithError(w, 501, fmt.Sprintf("error getting post. err :%v", err))
+		return
+	}
+	post := dbPostToPost(dbPost)
+	resp := struct {
+		Data interface{} `json:"data"`
+	}{Data: post}
+	respondWithJson(w, 200, resp)
+}
+
 func (config *Config) postPosttHandler(w http.ResponseWriter, r *http.Request) {
 	body := Post{}
 	decoder := json.NewDecoder(r.Body)
@@ -43,7 +62,7 @@ func (config *Config) postPosttHandler(w http.ResponseWriter, r *http.Request) {
 		Thumbnail: sql.NullString{Valid: true, String: body.Thumbnail},
 	})
 	if err != nil {
-		respondWithError(w, 501, fmt.Sprintf("error posting playlist to db. err: %v", err))
+		respondWithError(w, 501, fmt.Sprintf("error posting Post to db. err: %v", err))
 		return
 	}
 	post := dbPostToPost(dbPost)
@@ -54,7 +73,7 @@ func (config *Config) postPosttHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (config *Config) updatePosttHandler(w http.ResponseWriter, r *http.Request) {
+func (config *Config) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	body := Post{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
@@ -78,7 +97,7 @@ func (config *Config) updatePosttHandler(w http.ResponseWriter, r *http.Request)
 		ID: postId,
 	})
 	if err != nil {
-		respondWithError(w, 501, fmt.Sprintf("error posting playlist to db. err: %v", err))
+		respondWithError(w, 501, fmt.Sprintf("error posting Post to db. err: %v", err))
 		return
 	}
 	post := dbPostToPost(dbPost)
@@ -89,7 +108,7 @@ func (config *Config) updatePosttHandler(w http.ResponseWriter, r *http.Request)
 }
 
 
-func (config *Config) deletePosttHandler(w http.ResponseWriter, r *http.Request) {
+func (config *Config) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	
 	id := chi.URLParam(r, "postID")
 	postId, err := uuid.Parse(id)

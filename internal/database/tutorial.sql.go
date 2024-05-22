@@ -7,12 +7,23 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
 
+const deleteTutorial = `-- name: DeleteTutorial :exec
+DELETE  FROM tutorials
+ WHERE id = $1
+`
+
+func (q *Queries) DeleteTutorial(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteTutorial, id)
+	return err
+}
+
 const getPlaylistTutorials = `-- name: GetPlaylistTutorials :many
-SELECT id, title, tutorial_url, description, youtube_link, playlist_id FROM tutorials
+SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials
 WHERE $1=playlist_id
 `
 
@@ -32,6 +43,7 @@ func (q *Queries) GetPlaylistTutorials(ctx context.Context, playlistID uuid.UUID
 			&i.Description,
 			&i.YoutubeLink,
 			&i.PlaylistID,
+			&i.Thumbnail,
 		); err != nil {
 			return nil, err
 		}
@@ -47,7 +59,7 @@ func (q *Queries) GetPlaylistTutorials(ctx context.Context, playlistID uuid.UUID
 }
 
 const getTutorial = `-- name: GetTutorial :one
-SELECT id, title, tutorial_url, description, youtube_link, playlist_id FROM tutorials
+SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials
 WHERE $1=id
 `
 
@@ -61,12 +73,32 @@ func (q *Queries) GetTutorial(ctx context.Context, id uuid.UUID) (Tutorial, erro
 		&i.Description,
 		&i.YoutubeLink,
 		&i.PlaylistID,
+		&i.Thumbnail,
+	)
+	return i, err
+}
+
+const getTutorialWithId = `-- name: GetTutorialWithId :one
+SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials WHERE id = $1
+`
+
+func (q *Queries) GetTutorialWithId(ctx context.Context, id uuid.UUID) (Tutorial, error) {
+	row := q.db.QueryRowContext(ctx, getTutorialWithId, id)
+	var i Tutorial
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.TutorialUrl,
+		&i.Description,
+		&i.YoutubeLink,
+		&i.PlaylistID,
+		&i.Thumbnail,
 	)
 	return i, err
 }
 
 const getTutorials = `-- name: GetTutorials :many
-SELECT id, title, tutorial_url, description, youtube_link, playlist_id FROM tutorials
+SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials
 `
 
 func (q *Queries) GetTutorials(ctx context.Context) ([]Tutorial, error) {
@@ -85,6 +117,7 @@ func (q *Queries) GetTutorials(ctx context.Context) ([]Tutorial, error) {
 			&i.Description,
 			&i.YoutubeLink,
 			&i.PlaylistID,
+			&i.Thumbnail,
 		); err != nil {
 			return nil, err
 		}
@@ -109,7 +142,7 @@ youtube_link,
 playlist_id
 )
 VALUES ($1, $2, $3 , $4, $5)
-RETURNING id, title, tutorial_url, description, youtube_link, playlist_id
+RETURNING id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail
 `
 
 type PostTutorialParams struct {
@@ -136,6 +169,47 @@ func (q *Queries) PostTutorial(ctx context.Context, arg PostTutorialParams) (Tut
 		&i.Description,
 		&i.YoutubeLink,
 		&i.PlaylistID,
+		&i.Thumbnail,
+	)
+	return i, err
+}
+
+const updateTutorial = `-- name: UpdateTutorial :one
+UPDATE tutorials
+SET title = $1, tutorial_url=$2, description=$3, youtube_link=$4,  thumbnail = $5,  playlist_id=$6
+WHERE id = $7
+RETURNING id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail
+`
+
+type UpdateTutorialParams struct {
+	Title       string
+	TutorialUrl string
+	Description string
+	YoutubeLink string
+	Thumbnail   sql.NullString
+	PlaylistID  uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) UpdateTutorial(ctx context.Context, arg UpdateTutorialParams) (Tutorial, error) {
+	row := q.db.QueryRowContext(ctx, updateTutorial,
+		arg.Title,
+		arg.TutorialUrl,
+		arg.Description,
+		arg.YoutubeLink,
+		arg.Thumbnail,
+		arg.PlaylistID,
+		arg.ID,
+	)
+	var i Tutorial
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.TutorialUrl,
+		&i.Description,
+		&i.YoutubeLink,
+		&i.PlaylistID,
+		&i.Thumbnail,
 	)
 	return i, err
 }

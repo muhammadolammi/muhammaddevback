@@ -2,6 +2,10 @@
 SELECT * FROM posts;
 
 
+-- name: GetPostWithId :one
+SELECT * FROM posts WHERE id = $1;
+
+
 -- name: PostPost :one
 INSERT INTO posts (
 title,

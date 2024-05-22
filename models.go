@@ -26,4 +26,5 @@ type Tutorial struct {
 	Description string `json:"description"`
 	YoutubeLink string `json:"youtube_link"`
 	PlaylistID  string `json:"playlist_id"`
+	Thumbnail string `json:"thumbnail"`
 }

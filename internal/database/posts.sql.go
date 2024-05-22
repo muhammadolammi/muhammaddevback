@@ -21,6 +21,23 @@ func (q *Queries) DeletePost(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getPostWithId = `-- name: GetPostWithId :one
+SELECT id, title, post_url, content, thumbnail FROM posts WHERE id = $1
+`
+
+func (q *Queries) GetPostWithId(ctx context.Context, id uuid.UUID) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getPostWithId, id)
+	var i Post
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.PostUrl,
+		&i.Content,
+		&i.Thumbnail,
+	)
+	return i, err
+}
+
 const getPosts = `-- name: GetPosts :many
 SELECT id, title, post_url, content, thumbnail FROM posts
 `
