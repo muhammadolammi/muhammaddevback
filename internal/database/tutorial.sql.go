@@ -97,6 +97,25 @@ func (q *Queries) GetTutorialWithId(ctx context.Context, id uuid.UUID) (Tutorial
 	return i, err
 }
 
+const getTutorialWithTitle = `-- name: GetTutorialWithTitle :one
+SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials WHERE title = $1
+`
+
+func (q *Queries) GetTutorialWithTitle(ctx context.Context, title string) (Tutorial, error) {
+	row := q.db.QueryRowContext(ctx, getTutorialWithTitle, title)
+	var i Tutorial
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.TutorialUrl,
+		&i.Description,
+		&i.YoutubeLink,
+		&i.PlaylistID,
+		&i.Thumbnail,
+	)
+	return i, err
+}
+
 const getTutorials = `-- name: GetTutorials :many
 SELECT id, title, tutorial_url, description, youtube_link, playlist_id, thumbnail FROM tutorials
 `

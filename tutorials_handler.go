@@ -103,6 +103,31 @@ func (config *Config) getTutorialWithIdHandler(w http.ResponseWriter, r *http.Re
 	respondWithJson(w, 200, resp)
 }
 
+func (config *Config) getTutorialWithTitleHandler(w http.ResponseWriter, r *http.Request) {
+	title := chi.URLParam(r, "tutorialTitle")
+	
+	// rawQuery := r.URL.RawQuery
+    // title, err := url.QueryUnescape(encodedTitle)
+    // if err != nil {
+    //     respondWithError(w, 400, fmt.Sprintf("error decoding title: %v", err))
+    //     return
+    // }
+	log.Println(title)
+	// log.Println(rawQuery)
+ 
+	
+	dbTutorial, err := config.DB.GetTutorialWithTitle(r.Context(), title)
+	if err != nil {
+		respondWithError(w, 501, fmt.Sprintf("error getting tutorial. err :%v", err))
+		return
+	}
+	tutorial := dbTutorialToTutorial(dbTutorial)
+	resp := struct {
+		Data interface{} `json:"data"`
+	}{Data: tutorial}
+	respondWithJson(w, 200, resp)
+}
+
 
 func (config *Config) updateTutorialHandler(w http.ResponseWriter, r *http.Request) { 
 	body := Tutorial{}

@@ -29,6 +29,9 @@ RETURNING *;
 -- name: GetTutorialWithId :one
 SELECT * FROM tutorials WHERE id = $1;
 
+-- name: GetTutorialWithTitle :one
+SELECT * FROM tutorials WHERE title = $1;
+
 -- name: DeleteTutorial :exec
 DELETE  FROM tutorials
  WHERE id = $1;

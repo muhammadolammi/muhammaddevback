@@ -4,6 +4,8 @@ SELECT * FROM posts;
 
 -- name: GetPostWithId :one
 SELECT * FROM posts WHERE id = $1;
+-- name: GetPostWithTitle :one
+SELECT * FROM posts WHERE title = $1;
 
 
 -- name: PostPost :one

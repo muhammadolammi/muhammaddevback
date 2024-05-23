@@ -27,9 +27,12 @@ func server(apiConfig *Config) {
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)
+	apiRoute.Get("/post/{postID}", apiConfig.getPostWithIdHandler)
+	apiRoute.Get("/getpost/{postTitle}", apiConfig.getPostWithTitleHandler)
+
 	apiRoute.Put("/post/{postID}", apiConfig.updatePostHandler)
 	apiRoute.Delete("/post/{postID}", apiConfig.deletePostHandler)
-	apiRoute.Get("/post/{postID}", apiConfig.getPostWithIdHandler)
+	
 
 	// HANDLE PLAYLISTS
 
@@ -39,9 +42,12 @@ func server(apiConfig *Config) {
 	apiRoute.Post("/tutorials", apiConfig.postTutorialHandler)
 	apiRoute.Get("/tutorials/{playlistID}", apiConfig.getPlaylistTutorialsHandler)
 	apiRoute.Get("/tutorials", apiConfig.getTutorialsHandler)
-	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
+	apiRoute.Get("/gettutorial/{tutorialTitle}", apiConfig.getTutorialWithTitleHandler)
 	apiRoute.Get("/tutorial/{tutorialID}", apiConfig.getTutorialWithIdHandler)
+	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
 	apiRoute.Put("/tutorial/{tutorialID}", apiConfig.updateTutorialHandler)
+	
+
 
 
 	// HANLDE IMAGES

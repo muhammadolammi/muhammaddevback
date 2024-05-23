@@ -38,6 +38,23 @@ func (q *Queries) GetPostWithId(ctx context.Context, id uuid.UUID) (Post, error)
 	return i, err
 }
 
+const getPostWithTitle = `-- name: GetPostWithTitle :one
+SELECT id, title, post_url, content, thumbnail FROM posts WHERE title = $1
+`
+
+func (q *Queries) GetPostWithTitle(ctx context.Context, title string) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getPostWithTitle, title)
+	var i Post
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.PostUrl,
+		&i.Content,
+		&i.Thumbnail,
+	)
+	return i, err
+}
+
 const getPosts = `-- name: GetPosts :many
 SELECT id, title, post_url, content, thumbnail FROM posts
 `

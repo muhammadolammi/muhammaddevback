@@ -44,6 +44,22 @@ func (config *Config) getPostWithIdHandler(w http.ResponseWriter, r *http.Reques
 	respondWithJson(w, 200, resp)
 }
 
+
+func (config *Config) getPostWithTitleHandler(w http.ResponseWriter, r *http.Request) {
+	title:= chi.URLParam(r, "postTitle")
+	
+	dbPost, err := config.DB.GetPostWithTitle(r.Context(), title)
+	if err != nil {
+		respondWithError(w, 501, fmt.Sprintf("error getting post. err :%v", err))
+		return
+	}
+	post := dbPostToPost(dbPost)
+	resp := struct {
+		Data interface{} `json:"data"`
+	}{Data: post}
+	respondWithJson(w, 200, resp)
+}
+
 func (config *Config) postPosttHandler(w http.ResponseWriter, r *http.Request) {
 	body := Post{}
 	decoder := json.NewDecoder(r.Body)
