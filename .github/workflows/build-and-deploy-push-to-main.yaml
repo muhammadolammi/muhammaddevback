@@ -1,0 +1,15 @@
+name: Deploy to Firebase Hosting on push and merge
+on:
+  push :
+   branches: 
+     main
+
+
+permissions:
+ checks: write
+ contents: read
+ pull-requests: write
+jobs:
+    deployment:
+        runs-on: ubuntu-latest
+
