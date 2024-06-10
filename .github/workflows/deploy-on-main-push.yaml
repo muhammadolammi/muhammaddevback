@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting on push and merge
+name: Build and Deploy
 on:
   push :
    branches: 
@@ -20,8 +20,7 @@ jobs:
         steps:
           - name: Set-Up Go
             uses: actions/setup-go@v4
-            with:
-              go-version: '1.21.5'
+          
           - name: Checkout Codes
             uses: actions/checkout@v4
           - name : Build The Server Binary 
@@ -48,7 +47,7 @@ jobs:
 
     # deploy:
     #   needs: build 
-    #   name: Deploying to ec2
+    #   name: Deploying to host
     #   runs-on: ubuntu-latest
     #   steps: 
     #     #remember to remove checkout and secret decrypt duplicates
