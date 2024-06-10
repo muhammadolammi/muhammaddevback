@@ -1,0 +1,32 @@
+name: Deploy to Firebase Hosting on push and merge
+on:
+  push :
+   branches: 
+     main
+
+
+permissions:
+ checks: write
+ contents: read
+ pull-requests: write
+jobs:
+ test-build-deploy:
+
+   runs-on: ubuntu-latest
+   steps:
+    - uses: actions/checkout@v4
+    - name: Setup Go 
+      uses: actions/setup-go@v5
+    - name: Run tests
+      run: go test
+    - run : chmod +x ./build.sh
+    - name: build 
+      run: ./build
+
+    - name: Build Docker Image from binary
+      run: 
+    - name: Shutdown running docker container
+      run:
+    - name: Run new container with new image
+      run:
+      
