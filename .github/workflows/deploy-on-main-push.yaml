@@ -21,7 +21,7 @@ jobs:
       run: go test
     - run : chmod +x ./build.sh
     - name: build 
-      run: ./build
+      run: ./build.sh
 
     - name: Build Docker Image from binary
       run: echo "Build docker image"
