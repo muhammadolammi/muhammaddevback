@@ -3,30 +3,68 @@ on:
   push :
    branches: 
      main
-
+env:
+  gpgkey: ${{secrets.GPG_KEY}}
 
 permissions:
  checks: write
  contents: read
  pull-requests: write
 jobs:
- test-build-deploy:
+    build:
+        name: Building and updating docker images.
+        permissions:
+          id-token: write
+          contents: read
+        runs-on: ubuntu-latest
+        steps:
+          - name: Set-Up Go
+            uses: actions/setup-go@v4
+            with:
+              go-version: '1.21.5'
+          - name: Checkout Codes
+            uses: actions/checkout@v4
+          - name : Build The Server Binary 
+            run: |
+             pwd
+             ./build.sh
+             docker --version
+          - name: SET version to gitenv
+            run: echo "deployversion=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          - name: Build New Docker Image
+            run : |
+             docker build . -t muhammadolammi/naijalocationserver:latest -t muhammadolammi/naijalocationserver:'${{ env.deployversion}}'
+             docker image ls 
+          - name: Log in To docker 
+            uses: docker/login-action@v3
+            with:
+              username: ${{ secrets.DOCKERHUB_USERNAME }}
+              password: ${{ secrets.DOCKERHUB_TOKEN }}
+          - name: Push Docker images
+            run: |
+             docker push  muhammadolammi/muhammaddevback --all-tags
+          
 
-   runs-on: ubuntu-latest
-   steps:
-    - uses: actions/checkout@v4
-    - name: Setup Go 
-      uses: actions/setup-go@v5
-    - name: Run tests
-      run: go test
-    - run : chmod +x ./build.sh
-    - name: build 
-      run: ./build.sh
-
-    - name: Build Docker Image from binary
-      run: echo "Build docker image"
-    - name: Shutdown running docker container
-      run: echo "Shutdown running container"
-    - name: Run new container with new image
-      run: echo "Run new container"
-      
+    deploy:
+      needs: build 
+      name: Deploying to ec2
+      runs-on: ubuntu-latest
+      steps: 
+        #remember to remove checkout and secret decrypt duplicates
+        - name: Checkout Codes
+          uses: actions/checkout@v4
+        - run: |
+            mkdir secrets
+            gpg --quiet --batch --yes --decrypt --passphrase="$gpgkey" --output secrets/serverpem.pem serverpem.pem.gpg
+            chmod 400 "secrets/serverpem.pem"
+           
+        - name: Pull docker image
+          run: |
+           ssh -o StrictHostKeyChecking=No -tt -i "secrets/serverpem.pem" '${{secrets.SERVER_IP}}' 'sudo docker pull muhammadolammi/muhammaddevback:latest'
+        - name: Stop docker container 
+          run: |
+            ssh -o StrictHostKeyChecking=No -tt -i "secrets/serverpem.pem" '${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
+            ssh -o StrictHostKeyChecking=No -tt -i "secrets/serverpem.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm beackend || true'
+        - name: Run New Container
+          run: |
+             ssh -o StrictHostKeyChecking=No -tt -i "secrets/serverpem.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
