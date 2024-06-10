@@ -46,26 +46,26 @@ jobs:
              docker push  muhammadolammi/muhammaddevback --all-tags
           
 
-    deploy:
-      needs: build 
-      name: Deploying to ec2
-      runs-on: ubuntu-latest
-      steps: 
-        #remember to remove checkout and secret decrypt duplicates
-        - name: Checkout Codes
-          uses: actions/checkout@v4
-        - run: |
-            mkdir secrets
-            gpg --quiet --batch --yes --decrypt --passphrase="$gpgkey" --output secrets/key.pem key.pem.gpg
-            chmod 400 "secrets/serverpem.pem"
+    # deploy:
+    #   needs: build 
+    #   name: Deploying to ec2
+    #   runs-on: ubuntu-latest
+    #   steps: 
+    #     #remember to remove checkout and secret decrypt duplicates
+    #     - name: Checkout Codes
+    #       uses: actions/checkout@v4
+    #     - run: |
+    #         mkdir secrets
+    #         gpg --quiet --batch --yes --decrypt --passphrase="$gpgkey" --output secrets/key.pem key.pem.gpg
+    #         chmod 400 "secrets/serverpem.pem"
            
-        - name: Pull docker image
-          run: |
-           ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker pull muhammadolammi/muhammaddevback:latest'
-        - name: Stop docker container 
-          run: |
-            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
-            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm beackend || true'
-        - name: Run New Container
-          run: |
-             ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
+    #     - name: Pull docker image
+    #       run: |
+    #        ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker pull muhammadolammi/muhammaddevback:latest'
+    #     - name: Stop docker container 
+    #       run: |
+    #         ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
+    #         ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm beackend || true'
+    #     - name: Run New Container
+    #       run: |
+    #          ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
