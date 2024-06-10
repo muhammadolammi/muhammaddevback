@@ -24,9 +24,9 @@ jobs:
       run: ./build
 
     - name: Build Docker Image from binary
-      run: 
+      run: echo "Build docker image"
     - name: Shutdown running docker container
-      run:
+      run: echo "Shutdown running container"
     - name: Run new container with new image
-      run:
+      run: echo "Run new container"
       
