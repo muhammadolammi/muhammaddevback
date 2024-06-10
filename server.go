@@ -6,9 +6,25 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
+// Middleware to check for the API key in the authorization header for all POST, PUT, DELETE, and OPTIONS requests
+func apiKeyAuth(apiKey string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == "POST" || r.Method == "PUT" || r.Method == "DELETE" || r.Method == "OPTIONS" {
+				authHeader := r.Header.Get("Authorization")
+				if authHeader != apiKey {
+					http.Error(w, "Action Not Permitted ", http.StatusForbidden)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
 func server(apiConfig *Config) {
 
 	// Define CORS options
@@ -21,7 +37,17 @@ func server(apiConfig *Config) {
 	}
 	router := chi.NewRouter()
 	apiRoute := chi.NewRouter()
+	// ADD MIDDLREWARE
+	// A good base middleware stack
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+
 	router.Use(cors.Handler(corsOptions))
+	router.Use(apiKeyAuth(apiConfig.API_KEY))
+
+	// ADD ROUTES
 	apiRoute.Get("/hello", helloReady)
 	apiRoute.Get("/error", errorReady)
 	// HANDLE POSTS
@@ -32,7 +58,6 @@ func server(apiConfig *Config) {
 
 	apiRoute.Put("/post/{postID}", apiConfig.updatePostHandler)
 	apiRoute.Delete("/post/{postID}", apiConfig.deletePostHandler)
-	
 
 	// HANDLE PLAYLISTS
 
@@ -46,9 +71,6 @@ func server(apiConfig *Config) {
 	apiRoute.Get("/tutorial/{tutorialID}", apiConfig.getTutorialWithIdHandler)
 	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
 	apiRoute.Put("/tutorial/{tutorialID}", apiConfig.updateTutorialHandler)
-	
-
-
 
 	// HANLDE IMAGES
 	apiRoute.Get("/images", apiConfig.getImagesHandler)

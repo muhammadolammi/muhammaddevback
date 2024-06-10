@@ -11,11 +11,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Config struct {
-	PORT string
-	DB   *database.Queries
-}
-
 func main() {
 	fmt.Println("Yha Allah, Please make this a successful Project.")
 
@@ -32,6 +27,13 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Println("empty dbURL")
+		return
+	}
+
+	apiKey := os.Getenv("API_KEY")
+	if dbURL == "" {
+		log.Println("empty API_KEY")
+		return
 
 	}
 
@@ -43,8 +45,9 @@ func main() {
 	dbQueries := database.New(db)
 
 	apiConfig := Config{
-		PORT: port,
-		DB:   dbQueries,
+		PORT:    port,
+		DB:      dbQueries,
+		API_KEY: apiKey,
 	}
 
 	server(&apiConfig)

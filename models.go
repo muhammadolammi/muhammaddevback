@@ -1,5 +1,12 @@
 package main
 
+import "muhammaddev/internal/database"
+
+type Config struct {
+	PORT    string
+	DB      *database.Queries
+	API_KEY string
+}
 type Image struct {
 	ID       string `json:"id"`
 	ImageUrl string `json:"image_url"`
@@ -12,10 +19,10 @@ type Playlist struct {
 }
 
 type Post struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	PostUrl string `json:"post_url"`
-	Content string `json:"content"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	PostUrl   string `json:"post_url"`
+	Content   string `json:"content"`
 	Thumbnail string `json:"thumbnail"`
 }
 
@@ -26,5 +33,5 @@ type Tutorial struct {
 	Description string `json:"description"`
 	YoutubeLink string `json:"youtube_link"`
 	PlaylistID  string `json:"playlist_id"`
-	Thumbnail string `json:"thumbnail"`
+	Thumbnail   string `json:"thumbnail"`
 }
