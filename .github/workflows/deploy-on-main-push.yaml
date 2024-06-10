@@ -34,7 +34,7 @@ jobs:
             run: echo "deployversion=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           - name: Build New Docker Image
             run : |
-             docker build . -t muhammadolammi/naijalocationserver:latest -t muhammadolammi/naijalocationserver:'${{ env.deployversion}}'
+             docker build . -t muhammadolammi/muhammaddevback:latest -t muhammadolammi/muhammaddevback:'${{ env.deployversion}}'
              docker image ls 
           - name: Log in To docker 
             uses: docker/login-action@v3
