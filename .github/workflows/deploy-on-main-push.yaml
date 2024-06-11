@@ -62,16 +62,16 @@ jobs:
           uses: actions/checkout@v4
         - run: |
             mkdir secrets
-            echo "${{secrets.SSH_KEY}}" >  secrets/key.pem 
-            chmod 600 "secrets/key.pem"
+            gpg --quiet --batch --yes --decrypt --passphrase="$gpgkey" --output secrets/key.pem key.pem.gpg
+            chmod 400 "secrets/key.pem"
            
         - name: Pull docker image
           run: |
-           ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" ${{secrets.SERVER_USER}}@'${{secrets.SERVER_IP}}' 'sudo docker pull muhammadolammi/muhammaddevback:latest'
+           ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker pull muhammadolammi/muhammaddevback:latest'
         - name: Stop docker container 
           run: |
-            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" ${{secrets.SERVER_USER}}@'${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
-            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" ${{secrets.SERVER_USER}}@'${{secrets.SERVER_IP}}' 'sudo docker rm backend || true'
+            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
+            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm backend || true'
         - name: Run New Container
           run: |
-             ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" ${{secrets.SERVER_USER}}@'${{secrets.SERVER_IP}}' 'sudo docker run --name backend --network main -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' -e DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
+             ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend --network main -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' -e DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
