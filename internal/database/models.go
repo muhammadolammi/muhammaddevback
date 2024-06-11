@@ -33,3 +33,11 @@ type Tutorial struct {
 	PlaylistID  uuid.UUID
 	Thumbnail   sql.NullString
 }
+
+type User struct {
+	ID        uuid.UUID
+	FirstName string
+	LastName  string
+	Email     string
+	Password  string
+}

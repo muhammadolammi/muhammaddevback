@@ -50,6 +50,10 @@ func server(apiConfig *Config) {
 	// ADD ROUTES
 	apiRoute.Get("/hello", helloReady)
 	apiRoute.Get("/error", errorReady)
+
+	// Handle Auth
+	apiRoute.Post("/users", apiConfig.signupHandler)
+	apiRoute.Post("/login", apiConfig.loginHandler)
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)

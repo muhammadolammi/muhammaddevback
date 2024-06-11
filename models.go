@@ -2,6 +2,13 @@ package main
 
 import "muhammaddev/internal/database"
 
+type User struct {
+	ID        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+}
 type Config struct {
 	PORT    string
 	DB      *database.Queries
