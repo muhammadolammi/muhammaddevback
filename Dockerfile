@@ -6,6 +6,6 @@ FROM debian:stable-slim
 
 # COPY source destination
 COPY bin/muhammaddev /bin/muhammaddev
+ 
 
-
-CMD ["/bin/naijalocationserver"]
+CMD ["/bin/muhammaddev"]
