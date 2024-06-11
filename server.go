@@ -50,6 +50,11 @@ func server(apiConfig *Config) {
 	// ADD ROUTES
 	apiRoute.Get("/hello", helloReady)
 	apiRoute.Get("/error", errorReady)
+
+	// Handle Auth
+	apiRoute.Post("/users", apiConfig.signupHandler)
+	apiRoute.Post("/login", apiConfig.loginHandler)
+	apiRoute.Put("/user", apiConfig.passwordChangeHandler)
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)
@@ -71,10 +76,6 @@ func server(apiConfig *Config) {
 	apiRoute.Get("/tutorial/{tutorialID}", apiConfig.getTutorialWithIdHandler)
 	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
 	apiRoute.Put("/tutorial/{tutorialID}", apiConfig.updateTutorialHandler)
-
-	// HANLDE IMAGES
-	apiRoute.Get("/images", apiConfig.getImagesHandler)
-	apiRoute.Post("/images", apiConfig.postImageHandler)
 
 	router.Mount("/api", apiRoute)
 	router.Get("/", renderHome)

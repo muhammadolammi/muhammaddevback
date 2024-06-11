@@ -27,7 +27,7 @@ func dbTutorialToTutorial(dbTutorial database.Tutorial) Tutorial {
 		Description: dbTutorial.Description,
 		YoutubeLink: dbTutorial.YoutubeLink,
 		PlaylistID:  dbTutorial.PlaylistID.String(),
-		Thumbnail: dbTutorial.Thumbnail.String,
+		Thumbnail:   dbTutorial.Thumbnail.String,
 	}
 }
 
@@ -40,27 +40,12 @@ func dbTutorialsToTutorials(dbTutorials []database.Tutorial) []Tutorial {
 	return tutorials
 }
 
-func dbImageToImage(dbImage database.Image) Image {
-	return Image{
-		ID:       dbImage.ID.String(),
-		ImageUrl: dbImage.ImageUrl,
-	}
-}
-
-func dbImagesToImages(dbImages []database.Image) []Image {
-	images := []Image{}
-	for _, image := range dbImages {
-		images = append(images, dbImageToImage(image))
-	}
-	return images
-}
-
 func dbPostToPost(dbPost database.Post) Post {
 	return Post{
-		ID:      dbPost.ID.String(),
-		Title:   dbPost.Title,
-		PostUrl: dbPost.PostUrl,
-		Content: dbPost.Content,
+		ID:        dbPost.ID.String(),
+		Title:     dbPost.Title,
+		PostUrl:   dbPost.PostUrl,
+		Content:   dbPost.Content,
 		Thumbnail: dbPost.Thumbnail.String,
 	}
 }
