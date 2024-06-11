@@ -72,10 +72,6 @@ func server(apiConfig *Config) {
 	apiRoute.Delete("/tutorial/{tutorialID}", apiConfig.deleteTutorialHandler)
 	apiRoute.Put("/tutorial/{tutorialID}", apiConfig.updateTutorialHandler)
 
-	// HANLDE IMAGES
-	apiRoute.Get("/images", apiConfig.getImagesHandler)
-	apiRoute.Post("/images", apiConfig.postImageHandler)
-
 	router.Mount("/api", apiRoute)
 	router.Get("/", renderHome)
 	srv := &http.Server{

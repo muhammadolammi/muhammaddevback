@@ -7,10 +7,6 @@ type Config struct {
 	DB      *database.Queries
 	API_KEY string
 }
-type Image struct {
-	ID       string `json:"id"`
-	ImageUrl string `json:"image_url"`
-}
 
 type Playlist struct {
 	ID          string `json:"id"`
