@@ -54,6 +54,7 @@ func server(apiConfig *Config) {
 	// Handle Auth
 	apiRoute.Post("/users", apiConfig.signupHandler)
 	apiRoute.Post("/login", apiConfig.loginHandler)
+	apiRoute.Put("/user", apiConfig.passwordChangeHandler)
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)

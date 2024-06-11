@@ -14,10 +14,21 @@ func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
 	body := User{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
+
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding body from http request. err: %v", err))
 		return
 	}
+	if body.Email == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a mail. err: %v", err))
+		return
+	}
+	if body.Password == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a password. err: %v", err))
+		return
+	}
+
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error hashing password. err: %v", err))
@@ -49,6 +60,14 @@ func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding body from http request. err: %v", err))
 		return
 	}
+	if body.Email == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter your registered email. err: %v", err))
+		return
+	}
+	if body.Password == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a password. err: %v", err))
+		return
+	}
 
 	user, err := config.DB.GetUserWithEmail(r.Context(), body.Email)
 
@@ -66,4 +85,63 @@ func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJson(w, 200, "Login successfully")
+}
+
+func (config *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Request) {
+
+	body := struct {
+		Email       string `json:"email"`
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&body)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding body from http request. err: %v", err))
+		return
+	}
+	if body.Email == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a mail. err: %v", err))
+		return
+	}
+	if body.OldPassword == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a password. err: %v", err))
+		return
+	}
+	if body.NewPassword == "" {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a new password. err: %v", err))
+		return
+	}
+
+	user, err := config.DB.GetUserWithEmail(r.Context(), body.Email)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting user. err: %v", err))
+		return
+	}
+	// AUTHENTICATE THE USER
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.OldPassword))
+	if err != nil {
+		if strings.Contains(err.Error(), `hashedPassword is not the hash of the given password`) {
+			respondWithError(w, http.StatusInternalServerError, "Wrong password.")
+			return
+		}
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf(" err: %v", err))
+		return
+	}
+	// UPDATE THE PASSWORD
+	newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.NewPassword), 10)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error hashing password. err: %v", err))
+		return
+	}
+	err = config.DB.UpdatePassword(r.Context(), database.UpdatePasswordParams{
+		Email:    body.Email,
+		Password: string(newHashedPassword),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error updating password. err: %v", err))
+		return
+	}
+	respondWithJson(w, 200, "Password Updated")
 }
