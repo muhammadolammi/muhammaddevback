@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"muhammaddev/internal/database"
 	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -29,6 +30,10 @@ func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
 		Password:  string(hashedPassword),
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), `duplicate key value violates unique constraint \"users_email_key\`) {
+			respondWithError(w, http.StatusInternalServerError, fmt.Sprint("User already created"))
+			return
+		}
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating user. err: %v", err))
 		return
 	}
