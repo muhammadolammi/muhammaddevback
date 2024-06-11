@@ -31,7 +31,7 @@ func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), `duplicate key value violates unique constraint \"users_email_key\`) {
-			respondWithError(w, http.StatusInternalServerError, fmt.Sprint("User already created"))
+			respondWithError(w, http.StatusInternalServerError, "User already created")
 			return
 		}
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating user. err: %v", err))
@@ -58,7 +58,11 @@ func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Wrong password. err: %v", err))
+		if strings.Contains(err.Error(), `hashedPassword is not the hash of the given password`) {
+			respondWithError(w, http.StatusInternalServerError, "Wrong password.")
+			return
+		}
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf(" err: %v", err))
 		return
 	}
 	respondWithJson(w, 200, "Login successfully")
