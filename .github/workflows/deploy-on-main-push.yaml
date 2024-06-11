@@ -56,7 +56,7 @@ jobs:
     #     - run: |
     #         mkdir secrets
     #         gpg --quiet --batch --yes --decrypt --passphrase="$gpgkey" --output secrets/key.pem key.pem.gpg
-    #         chmod 400 "secrets/serverpem.pem"
+    #         chmod 400 "secrets/key.pem"
            
     #     - name: Pull docker image
     #       run: |
@@ -67,4 +67,4 @@ jobs:
     #         ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm beackend || true'
     #     - name: Run New Container
     #       run: |
-    #          ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
+    #          ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend --network main -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'

@@ -8,4 +8,4 @@ FROM debian:stable-slim
 COPY bin/muhammaddev /bin/muhammaddev
  
 
-CMD ["/bin/naijalocationserver"]
+CMD ["/bin/muhammaddev"]
