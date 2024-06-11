@@ -4,3 +4,6 @@
 addkeys.sh
 /ssl
 setuphost.sh
+nginx.conf
+pg_hba.conf
+postgresql.conf
