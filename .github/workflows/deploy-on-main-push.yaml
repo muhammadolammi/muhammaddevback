@@ -64,7 +64,7 @@ jobs:
         - name: Stop docker container 
           run: |
             ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker stop backend || true'
-            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm beackend || true'
+            ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker rm backend || true'
         - name: Run New Container
           run: |
              ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend --network main -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'

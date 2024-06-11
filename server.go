@@ -17,7 +17,7 @@ func apiKeyAuth(apiKey string) func(http.Handler) http.Handler {
 			if r.Method == "POST" || r.Method == "PUT" || r.Method == "DELETE" || r.Method == "OPTIONS" {
 				authHeader := r.Header.Get("Authorization")
 				if authHeader != apiKey {
-					http.Error(w, "Action Not Permitted ", http.StatusForbidden)
+					respondWithError(w, http.StatusForbidden, "Action Not Permitted ")
 					return
 				}
 			}
