@@ -6,6 +6,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -22,6 +23,14 @@ type Post struct {
 	PostUrl   string
 	Content   string
 	Thumbnail sql.NullString
+}
+
+type RefreshToken struct {
+	ID        uuid.UUID
+	Token     string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UserID    uuid.UUID
 }
 
 type Tutorial struct {

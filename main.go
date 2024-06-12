@@ -49,7 +49,13 @@ func main() {
 		DB:      dbQueries,
 		API_KEY: apiKey,
 	}
-
+	// refreshToken, err := auth.GenerateRefreshToken()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// fmt.Println(refreshToken)
+	// fmt.Println(apiConfig)
 	server(&apiConfig)
 
 }

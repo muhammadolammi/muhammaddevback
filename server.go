@@ -55,6 +55,13 @@ func server(apiConfig *Config) {
 	apiRoute.Post("/users", apiConfig.signupHandler)
 	apiRoute.Post("/login", apiConfig.loginHandler)
 	apiRoute.Put("/user", apiConfig.passwordChangeHandler)
+	apiRoute.Post("/refresh", apiConfig.refresh)
+
+	validateRoute := chi.NewRouter()
+	validateRoute.Use(apiConfig.jwtMiddleware)
+	validateRoute.Post("/", apiConfig.validateHandler)
+	apiRoute.Mount("/validate", validateRoute)
+
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
 	apiRoute.Get("/posts", apiConfig.getPostsHandler)
