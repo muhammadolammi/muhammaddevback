@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-func (config *Config) getPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
-	dbPlaylists, err := config.DB.GetPlaylists(r.Context())
+func (apiConfig *Config) getPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
+	dbPlaylists, err := apiConfig.DB.GetPlaylists(r.Context())
 	if err != nil {
 		respondWithError(w, 501, fmt.Sprintf("error getting playlists err :%v", err))
 		return
@@ -21,7 +21,7 @@ func (config *Config) getPlaylistsHandler(w http.ResponseWriter, r *http.Request
 	respondWithJson(w, 200, resp)
 }
 
-func (config *Config) postPlaylistHandler(w http.ResponseWriter, r *http.Request) {
+func (apiConfig *Config) postPlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	body := Playlist{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
@@ -30,7 +30,7 @@ func (config *Config) postPlaylistHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	dbplaylist, err := config.DB.PostPlaylist(r.Context(), database.PostPlaylistParams{
+	dbplaylist, err := apiConfig.DB.PostPlaylist(r.Context(), database.PostPlaylistParams{
 
 		Description: sql.NullString{String: body.Description, Valid: true},
 		Name:        body.Name,

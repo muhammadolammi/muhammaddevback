@@ -35,9 +35,10 @@ type Tutorial struct {
 }
 
 type User struct {
-	ID        uuid.UUID
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	ID          uuid.UUID
+	FirstName   string
+	LastName    string
+	Email       string
+	Password    string
+	AccessToken sql.NullString
 }

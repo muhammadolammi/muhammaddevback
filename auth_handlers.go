@@ -3,15 +3,35 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"muhammaddev/internal/auth"
 	"muhammaddev/internal/database"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
-	body := User{}
+var tokenBlacklist = make(map[string]bool)
+
+func addToTokenBlacklist(token string) {
+	tokenBlacklist[token] = true
+}
+
+func isInTokenBlacklist(token string) bool {
+	return tokenBlacklist[token]
+}
+
+func (apiConfig *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
+	body := struct {
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+	}{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
 
@@ -28,13 +48,23 @@ func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userExist, err := apiConfig.DB.UserExists(r.Context(), body.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error validating user. err: %v", err))
+		return
+	}
+	if userExist {
+		respondWithError(w, http.StatusBadRequest, "User already exist. Login")
+		return
+	}
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error hashing password. err: %v", err))
 		return
 	}
-	_, err = config.DB.CreateUser(r.Context(), database.CreateUserParams{
+
+	_, err = apiConfig.DB.CreateUser(r.Context(), database.CreateUserParams{
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
@@ -48,12 +78,16 @@ func (config *Config) signupHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating user. err: %v", err))
 		return
 	}
-	respondWithJson(w, 200, "user created successfully")
+
+	respondWithJson(w, 200, "")
 }
 
-func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
+func (apiConfig *Config) signinHandler(w http.ResponseWriter, r *http.Request) {
 
-	body := User{}
+	body := struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&body)
 	if err != nil {
@@ -68,8 +102,17 @@ func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Enter a password. err: %v", err))
 		return
 	}
+	userExist, err := apiConfig.DB.UserExists(r.Context(), body.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error validating user. err: %v", err))
+		return
+	}
+	if !userExist {
+		respondWithError(w, http.StatusUnauthorized, "No User with this mail. Signup")
+		return
+	}
 
-	user, err := config.DB.GetUserWithEmail(r.Context(), body.Email)
+	user, err := apiConfig.DB.GetUserWithEmail(r.Context(), body.Email)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting user. err: %v", err))
@@ -78,16 +121,32 @@ func (config *Config) loginHandler(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if err != nil {
 		if strings.Contains(err.Error(), `hashedPassword is not the hash of the given password`) {
-			respondWithError(w, http.StatusInternalServerError, "Wrong password.")
+			respondWithError(w, http.StatusUnauthorized, "Wrong password.")
 			return
 		}
 		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf(" err: %v", err))
 		return
 	}
-	respondWithJson(w, 200, "Login successfully")
+
+	err = auth.UpdateAccessToken([]byte(apiConfig.API_KEY), user.ID.String(), user.Email, apiConfig.AccessTokenExpirationMinutes, apiConfig.DB)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error updating user access token. err: %v", err))
+		return
+	}
+
+	err = auth.UpdateRefreshToken([]byte(apiConfig.API_KEY), user.ID.String(), apiConfig.RefreshTokenExpirationMinutes, w)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error updating user refresh token. err: %v", err))
+		return
+	}
+
+	respondWithJson(w, 200, "")
+
 }
 
-func (config *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Request) {
+func (apiConfig *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Request) {
 
 	body := struct {
 		Email       string `json:"email"`
@@ -113,7 +172,7 @@ func (config *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user, err := config.DB.GetUserWithEmail(r.Context(), body.Email)
+	user, err := apiConfig.DB.GetUserWithEmail(r.Context(), body.Email)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting user. err: %v", err))
@@ -135,7 +194,7 @@ func (config *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error hashing password. err: %v", err))
 		return
 	}
-	err = config.DB.UpdatePassword(r.Context(), database.UpdatePasswordParams{
+	err = apiConfig.DB.UpdatePassword(r.Context(), database.UpdatePasswordParams{
 		Email:    body.Email,
 		Password: string(newHashedPassword),
 	})
@@ -144,4 +203,144 @@ func (config *Config) passwordChangeHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	respondWithJson(w, 200, "Password Updated")
+}
+
+func (apiConfig *Config) getUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	refreshtoken, err := r.Cookie("refreshtoken")
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting refreshToken, Try login again. err: %v", err))
+		return
+	}
+
+	refreshclaims := &jwt.RegisteredClaims{}
+
+	refreshJwt, err := jwt.ParseWithClaims(
+		refreshtoken.Value,
+		refreshclaims,
+		func(token *jwt.Token) (interface{}, error) { return []byte(apiConfig.API_KEY), nil },
+	)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error parsing jwt claims, err: %v", err))
+		return
+	}
+
+	if refreshclaims.ExpiresAt != nil && refreshclaims.ExpiresAt.Time.Before(time.Now().UTC()) {
+		respondWithError(w, http.StatusUnauthorized, "refresh token expired")
+		return
+	}
+
+	userId, err := refreshJwt.Claims.GetIssuer()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting issuer from jwt claims, err: %v", err))
+		return
+	}
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error parsing id, err: %v", err))
+		return
+	}
+	user, err := apiConfig.DB.GetUser(r.Context(), id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting user, err: %v", err))
+		return
+	}
+
+	response := struct {
+		Data interface{} `json:"data"`
+	}{
+		Data: struct {
+			ID           string `json:"id"`
+			FirstName    string `json:"first_name"`
+			LastName     string `json:"last_name"`
+			RefreshToken string `json:"refresh_token"`
+			AccessToken  string `json:"access_token"`
+		}{
+			ID:           user.ID.String(),
+			FirstName:    user.FirstName,
+			LastName:     user.LastName,
+			RefreshToken: refreshtoken.Value,
+			AccessToken:  user.AccessToken.String,
+		},
+	}
+
+	respondWithJson(w, 200, response)
+}
+
+func (apiConfig *Config) refreshTokens(w http.ResponseWriter, r *http.Request) {
+	params := struct {
+		RefreshToken string `json:"refresh_token"`
+	}{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error decoding r body, err: %v", err))
+		return
+	}
+
+	// Check if the refresh token is in the blacklist
+	if isInTokenBlacklist(params.RefreshToken) {
+		respondWithError(w, http.StatusInternalServerError, "refresh token is invalid")
+		return
+	}
+
+	refreshclaims := &jwt.RegisteredClaims{}
+
+	_, err = jwt.ParseWithClaims(
+		params.RefreshToken,
+		refreshclaims,
+		func(token *jwt.Token) (interface{}, error) { return []byte(apiConfig.API_KEY), nil },
+	)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error parsing jwt claims, err: %v", err))
+		return
+	}
+
+	userIdString := refreshclaims.Issuer
+	userId, err := uuid.Parse(userIdString)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error parsing user id, err: %v", err))
+		return
+	}
+
+	user, err := apiConfig.DB.GetUser(r.Context(), userId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting user with id, err: %v", err))
+		return
+	}
+
+	refreshExpiration := refreshclaims.ExpiresAt.Time
+
+	if refreshExpiration.Before(time.Now().UTC()) {
+		respondWithError(w, http.StatusInternalServerError, "refresh token expired")
+		return
+	}
+
+	err = auth.UpdateAccessToken([]byte(apiConfig.API_KEY), user.ID.String(), user.Email, apiConfig.AccessTokenExpirationMinutes, apiConfig.DB)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error updating access token. err: %v", err))
+		return
+	}
+	err = auth.UpdateRefreshToken([]byte(apiConfig.API_KEY), user.ID.String(), apiConfig.RefreshTokenExpirationMinutes, w)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error updating refresh token. err: %v", err))
+		return
+	}
+
+	// Add the old refresh token to the blacklist
+	addToTokenBlacklist(params.RefreshToken)
+
+	// Debug
+	log.Println(refreshExpiration)
+	log.Println(user)
+
+}
+
+func (apiConfig *Config) validate(w http.ResponseWriter, r *http.Request) {
+
+	respondWithJson(w, 200, "logged in")
 }

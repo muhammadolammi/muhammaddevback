@@ -10,9 +10,11 @@ type User struct {
 	Email     string `json:"email"`
 }
 type Config struct {
-	PORT    string
-	DB      *database.Queries
-	API_KEY string
+	PORT                          string
+	DB                            *database.Queries
+	API_KEY                       string
+	AccessTokenExpirationMinutes  int
+	RefreshTokenExpirationMinutes int
 }
 
 type Playlist struct {
