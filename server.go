@@ -71,7 +71,7 @@ func server(apiConfig *Config) {
 
 	// Define CORS options
 	corsOptions := cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000", "https://muhammaddev.com", "*"}, // You can customize this based on your needs
+		AllowedOrigins: []string{"http://localhost:3000", "https://muhammaddev.com", "http://192.168.246.175:3000"}, // You can customize this based on your needs
 
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"}, // You can customize this based on your needs
