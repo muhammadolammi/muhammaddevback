@@ -7,23 +7,40 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
 
+const accessTokenExists = `-- name: AccessTokenExists :one
+SELECT EXISTS (
+    SELECT 1
+    FROM users
+    WHERE access_token = $1
+)
+`
+
+func (q *Queries) AccessTokenExists(ctx context.Context, accessToken sql.NullString) (bool, error) {
+	row := q.db.QueryRowContext(ctx, accessTokenExists, accessToken)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
 first_name, last_name,
-email, password )
-VALUES ( $1, $2, $3, $4)
-RETURNING id, first_name, last_name, email, password
+email, password, access_token  )
+VALUES ( $1, $2, $3, $4, $5)
+RETURNING id, first_name, last_name, email, password, access_token
 `
 
 type CreateUserParams struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	FirstName   string
+	LastName    string
+	Email       string
+	Password    string
+	AccessToken sql.NullString
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -32,6 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.LastName,
 		arg.Email,
 		arg.Password,
+		arg.AccessToken,
 	)
 	var i User
 	err := row.Scan(
@@ -40,12 +58,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.LastName,
 		&i.Email,
 		&i.Password,
+		&i.AccessToken,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, first_name, last_name, email, password FROM users
+SELECT id, first_name, last_name, email, password, access_token FROM users
 WHERE id=$1
 `
 
@@ -58,12 +77,13 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.LastName,
 		&i.Email,
 		&i.Password,
+		&i.AccessToken,
 	)
 	return i, err
 }
 
 const getUserWithEmail = `-- name: GetUserWithEmail :one
-SELECT id, first_name, last_name, email, password FROM users
+SELECT id, first_name, last_name, email, password, access_token FROM users
 WHERE email=$1
 `
 
@@ -76,12 +96,13 @@ func (q *Queries) GetUserWithEmail(ctx context.Context, email string) (User, err
 		&i.LastName,
 		&i.Email,
 		&i.Password,
+		&i.AccessToken,
 	)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, first_name, last_name, email, password FROM users
+SELECT id, first_name, last_name, email, password, access_token FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -99,6 +120,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.LastName,
 			&i.Email,
 			&i.Password,
+			&i.AccessToken,
 		); err != nil {
 			return nil, err
 		}
@@ -113,11 +135,28 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const updateAccessToken = `-- name: UpdateAccessToken :exec
+UPDATE users
+SET access_token = $1
+WHERE email = $2
+RETURNING id, first_name, last_name, email, password, access_token
+`
+
+type UpdateAccessTokenParams struct {
+	AccessToken sql.NullString
+	Email       string
+}
+
+func (q *Queries) UpdateAccessToken(ctx context.Context, arg UpdateAccessTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccessToken, arg.AccessToken, arg.Email)
+	return err
+}
+
 const updatePassword = `-- name: UpdatePassword :exec
 UPDATE users
 SET password = $1
 WHERE email = $2
-RETURNING id, first_name, last_name, email, password
+RETURNING id, first_name, last_name, email, password, access_token
 `
 
 type UpdatePasswordParams struct {
@@ -128,4 +167,19 @@ type UpdatePasswordParams struct {
 func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
 	_, err := q.db.ExecContext(ctx, updatePassword, arg.Password, arg.Email)
 	return err
+}
+
+const userExists = `-- name: UserExists :one
+SELECT EXISTS (
+    SELECT 1
+    FROM users
+    WHERE email = $1
+)
+`
+
+func (q *Queries) UserExists(ctx context.Context, email string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, userExists, email)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }

@@ -76,3 +76,4 @@ jobs:
         - name: Run New Container
           run: |
              ssh -o StrictHostKeyChecking=No -tt -i "secrets/key.pem" '${{secrets.SERVER_IP}}' 'sudo docker run --name backend --network main -d  -e PORT=8080 -e API_KEY='${{secrets.API_KEY}}' -e DB_URL='${{secrets.DB_URL}}'  muhammadolammi/muhammaddevback:latest'
+ 

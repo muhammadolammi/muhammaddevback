@@ -45,16 +45,18 @@ func main() {
 	dbQueries := database.New(db)
 
 	apiConfig := Config{
-		PORT:    port,
-		DB:      dbQueries,
-		API_KEY: apiKey,
+		PORT:                          port,
+		DB:                            dbQueries,
+		API_KEY:                       apiKey,
+		AccessTokenExpirationMinutes:  15,
+		RefreshTokenExpirationMinutes: 24 * 60,
 	}
 	// refreshToken, err := auth.GenerateRefreshToken()
 	// if err != nil {
 	// 	fmt.Println(err)
 	// 	return
 	// }
-	// fmt.Println(refreshToken)
+	// fmt.Println(ref reshToken)
 	// fmt.Println(apiConfig)
 	server(&apiConfig)
 

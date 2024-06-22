@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -11,13 +13,53 @@ import (
 )
 
 // Middleware to check for the API key in the authorization header for all POST, PUT, DELETE, and OPTIONS requests
-func apiKeyAuth(apiKey string) func(http.Handler) http.Handler {
+func (apiConfig *Config) userAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			accessToken := r.Header.Get("Authorization")
+			// Check if the request is to get user
+			if r.Method == "GET" && r.URL.Path == "/users/me" && accessToken == apiConfig.API_KEY {
+				// Allow the request if the admin API key is valid
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			if r.Method == "POST" || r.Method == "PUT" || r.Method == "DELETE" || r.Method == "OPTIONS" {
-				authHeader := r.Header.Get("Authorization")
-				if authHeader != apiKey {
-					respondWithError(w, http.StatusForbidden, "Action Not Permitted ")
+
+				if accessToken == "" {
+					respondWithError(w, http.StatusForbidden, "No access token")
+					return
+				}
+				// Check if the request is for creating a user
+				if r.URL.Path == "/api/signup" && accessToken == apiConfig.API_KEY {
+					// Allow the request if the admin API key is valid
+					next.ServeHTTP(w, r)
+					return
+				}
+				// Check if the request is for creating a login
+				if r.URL.Path == "/api/signin" && accessToken == apiConfig.API_KEY {
+					// Allow the request if the admin API key is valid
+					next.ServeHTTP(w, r)
+					return
+				}
+				// Check if the request is refreshing
+				if r.URL.Path == "/api/refresh" && accessToken == apiConfig.API_KEY {
+					// Allow the request if the admin API key is valid
+					next.ServeHTTP(w, r)
+					return
+				}
+
+				// Check for normal users
+				accessTokenExit, err := apiConfig.DB.AccessTokenExists(r.Context(), sql.NullString{
+					Valid:  true,
+					String: accessToken,
+				})
+				if err != nil {
+					respondWithError(w, http.StatusForbidden, fmt.Sprintf("Error validating access token err: %v", err))
+					return
+				}
+				if !accessTokenExit {
+					respondWithError(w, http.StatusForbidden, "Invalid access token")
 					return
 				}
 			}
@@ -29,7 +71,8 @@ func server(apiConfig *Config) {
 
 	// Define CORS options
 	corsOptions := cors.Options{
-		AllowedOrigins:   []string{"*"}, // You can customize this based on your needs
+		AllowedOrigins: []string{"http://localhost:3000", "https://muhammaddev.com", "*"}, // You can customize this based on your needs
+
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"}, // You can customize this based on your needs
 		AllowCredentials: true,
@@ -45,22 +88,20 @@ func server(apiConfig *Config) {
 	router.Use(middleware.Recoverer)
 
 	router.Use(cors.Handler(corsOptions))
-	router.Use(apiKeyAuth(apiConfig.API_KEY))
+	router.Use(apiConfig.userAuth())
 
 	// ADD ROUTES
 	apiRoute.Get("/hello", helloReady)
 	apiRoute.Get("/error", errorReady)
 
 	// Handle Auth
-	apiRoute.Post("/users", apiConfig.signupHandler)
-	apiRoute.Post("/login", apiConfig.loginHandler)
-	apiRoute.Put("/user", apiConfig.passwordChangeHandler)
-	apiRoute.Post("/refresh", apiConfig.refresh)
+	apiRoute.Post("/signup", apiConfig.signupHandler)
+	apiRoute.Post("/signin", apiConfig.signinHandler)
+	apiRoute.Post("/refresh", apiConfig.refreshTokens)
+	apiRoute.Post("/validate", apiConfig.validate)
 
-	validateRoute := chi.NewRouter()
-	validateRoute.Use(apiConfig.jwtMiddleware)
-	validateRoute.Post("/", apiConfig.validateHandler)
-	apiRoute.Mount("/validate", validateRoute)
+	apiRoute.Put("/user", apiConfig.passwordChangeHandler)
+	apiRoute.Get("/users/me", apiConfig.getUserHandler)
 
 	// HANDLE POSTS
 	apiRoute.Post("/posts", apiConfig.postPosttHandler)
