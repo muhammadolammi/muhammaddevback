@@ -24,13 +24,7 @@ jobs:
           - name: Checkout Codes
             uses: actions/checkout@v4
             
-          - name: Cache 
-            uses: actions/cache@v3
-            with:
-              path: /tmp/.buildx-cache
-              key: ${{ runner.os }}-buildx-${{ github.sha }}
-              restore-keys: |
-                ${{ runner.os }}-buildx-
+        
           - name : Build The Server Binary 
             run: |
              pwd
