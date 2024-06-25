@@ -31,7 +31,7 @@ func main() {
 	}
 
 	apiKey := os.Getenv("API_KEY")
-	if dbURL == "" {
+	if apiKey == "" {
 		log.Println("empty API_KEY")
 		return
 
