@@ -23,18 +23,16 @@ func main() {
 		log.Println("there is no port provided kindly provide a port.")
 		return
 	}
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Println("empty API_KEY")
+		return
 
+	}
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Println("empty dbURL")
 		return
-	}
-
-	apiKey := os.Getenv("API_KEY")
-	if dbURL == "" {
-		log.Println("empty API_KEY")
-		return
-
 	}
 
 	db, err := sql.Open("postgres", dbURL)

@@ -132,7 +132,6 @@ func server(apiConfig *Config) {
 		Handler:           router,
 		ReadHeaderTimeout: time.Minute,
 	}
-	log.Printf("serving server on port %v", apiConfig.PORT)
 
 	log.Printf("Serving on port: %s\n", apiConfig.PORT)
 	log.Fatal(srv.ListenAndServe())
